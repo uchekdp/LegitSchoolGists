@@ -1,0 +1,6 @@
+{
+  "name": "LegitSchoolGists - Nigerian Campus News & Education Portal",
+  "description": "Nigeria's premier platform for university admission updates, JAMB, WAEC, NECO, scholarships, career guidance, and campus life news.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
