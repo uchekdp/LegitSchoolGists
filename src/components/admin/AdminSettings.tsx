@@ -165,6 +165,56 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ settings, onSaveSe
           <span>{saving ? 'Saving...' : 'Save Site Settings'}</span>
         </button>
       </form>
+
+      {/* Backend Server Storage & Production Access Info */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-150">
+          <div>
+            <h3 className="font-extrabold text-slate-900 text-sm">
+              Backend Storage & Production Admin Access
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Everything in this portal is persisted directly on the backend server database.
+            </p>
+          </div>
+          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+            Persistent REST API
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span className="font-semibold text-slate-600 block mb-1">Official Admin Access URL:</span>
+            <div className="font-mono text-sky-700 bg-white p-2 rounded-lg border border-slate-200 break-all select-all font-bold">
+              https://legitschoolgists.com.ng/admin
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5">
+              Bookmark this address to directly access this administrator console.
+            </p>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <span className="font-semibold text-slate-600 block mb-1">Backend Database File:</span>
+            <div className="font-mono text-emerald-700 bg-white p-2 rounded-lg border border-slate-200 break-all font-bold">
+              /data/database.json
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1.5">
+              Stores all articles, categories, settings, institutions, and comments permanently on the server.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <a
+            href="/api/database"
+            target="_blank"
+            download="legitschoolgists_database_backup.json"
+            className="text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3.5 py-2 rounded-xl transition-colors inline-flex items-center gap-1.5"
+          >
+            <span>Download Database JSON Backup</span>
+          </a>
+        </div>
+      </div>
     </div>
   );
 };

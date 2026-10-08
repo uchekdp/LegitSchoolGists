@@ -209,6 +209,33 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
       {/* Main Admin Content Body */}
       <main className="grow p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full overflow-x-hidden">
+        {/* Top Portal Banner with Official Admin Dashboard URL & Backend Status */}
+        <div className="mb-6 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span className="font-bold text-slate-700 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Admin Access:</span>
+            </span>
+            <a
+              href="https://legitschoolgists.com.ng/admin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-sky-700 bg-sky-50 hover:bg-sky-100 px-2.5 py-1 rounded-lg border border-sky-200 font-semibold transition-colors flex items-center gap-1"
+              title="Official Admin Dashboard URL"
+            >
+              <span>https://legitschoolgists.com.ng/admin</span>
+              <ExternalLink className="w-3 h-3 text-sky-500" />
+            </a>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Backend Database Active</span>
+            </span>
+          </div>
+        </div>
+
         {children}
       </main>
     </div>

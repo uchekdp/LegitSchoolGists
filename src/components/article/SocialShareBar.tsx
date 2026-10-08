@@ -28,7 +28,7 @@ export const SocialShareBar: React.FC<SocialShareBarProps> = ({
   const [copied, setCopied] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
 
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : `https://legitschoolgists.com/article/${article.slug}`;
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : `https://legitschoolgists.com.ng/article/${article.slug}`;
   const shareTitle = article.title;
   const whatsappDeskNumber = '2349039733298'; // Official LegitSchoolGists WhatsApp Desk
 

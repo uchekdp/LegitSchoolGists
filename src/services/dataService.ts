@@ -31,6 +31,25 @@ function setLocalItem<T>(key: string, value: T): void {
   }
 }
 
+// ----------------- BACKEND API CLIENT -----------------
+
+export async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T | null> {
+  if (typeof window === 'undefined') return null;
+  try {
+    const res = await fetch(endpoint, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+      },
+      ...options,
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 // ----------------- ARTICLES SERVICE -----------------
 
 export async function fetchArticles(params?: {
@@ -40,6 +59,26 @@ export async function fetchArticles(params?: {
   searchQuery?: string;
   limit?: number;
 }): Promise<Article[]> {
+  // 1. Try Backend REST API first (stored permanently on backend)
+  try {
+    const queryParts: string[] = [];
+    if (params?.status) queryParts.push(`status=${encodeURIComponent(params.status)}`);
+    if (params?.categoryId) queryParts.push(`categoryId=${encodeURIComponent(params.categoryId)}`);
+    if (params?.categorySlug) queryParts.push(`categorySlug=${encodeURIComponent(params.categorySlug)}`);
+    if (params?.searchQuery) queryParts.push(`searchQuery=${encodeURIComponent(params.searchQuery)}`);
+    if (params?.limit) queryParts.push(`limit=${encodeURIComponent(params.limit)}`);
+
+    const qs = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    const apiArticles = await apiRequest<Article[]>(`/api/articles${qs}`);
+
+    if (apiArticles && Array.isArray(apiArticles) && apiArticles.length > 0) {
+      if (!params?.status || params.status === 'all') {
+        setLocalItem(STORAGE_KEY_ARTICLES, apiArticles);
+      }
+      return apiArticles;
+    }
+  } catch {}
+
   const supabase = getSupabase();
   const statusFilter = params?.status || 'published';
 
@@ -356,6 +395,19 @@ export async function saveArticle(article: Partial<Article> & { title: string })
     updated_at: now,
   };
 
+  // 1. Try saving directly to Backend Server Database
+  try {
+    const apiSaved = await apiRequest<Article>('/api/articles', {
+      method: 'POST',
+      body: JSON.stringify(fullArticle),
+    });
+    if (apiSaved) {
+      // Successfully saved to backend server storage
+    }
+  } catch (backendErr) {
+    console.warn('Backend API save warning:', backendErr);
+  }
+
   // Try saving to Supabase backend if configured
   if (supabase) {
     try {
@@ -500,6 +552,10 @@ export async function saveArticle(article: Partial<Article> & { title: string })
 }
 
 export async function deleteArticle(id: string): Promise<boolean> {
+  try {
+    await apiRequest(`/api/articles/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -516,6 +572,10 @@ export async function deleteArticle(id: string): Promise<boolean> {
 }
 
 export async function incrementArticleViews(id: string): Promise<void> {
+  try {
+    await apiRequest(`/api/articles/${encodeURIComponent(id)}/views`, { method: 'POST' });
+  } catch {}
+
   const localArticles = getLocalItem<Article[]>(STORAGE_KEY_ARTICLES, []);
   const article = localArticles.find((a) => a.id === id);
   if (article) {
@@ -537,6 +597,17 @@ const STORAGE_KEY_DELETED_CATEGORIES = 'lsg_deleted_category_ids';
 
 export async function fetchCategories(): Promise<Category[]> {
   const deletedIds = getLocalItem<string[]>(STORAGE_KEY_DELETED_CATEGORIES, []);
+
+  // Try backend API first
+  try {
+    const apiCats = await apiRequest<Category[]>('/api/categories');
+    if (apiCats && Array.isArray(apiCats) && apiCats.length > 0) {
+      const filtered = apiCats.filter((c) => !deletedIds.includes(c.id));
+      setLocalItem(STORAGE_KEY_CATEGORIES, filtered);
+      return filtered;
+    }
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -562,6 +633,16 @@ export async function saveCategory(category: Partial<Category> & { name: string 
     description: category.description || '',
     article_count: category.article_count || 0,
   };
+
+  // 1. Save to Backend REST API
+  try {
+    await apiRequest<Category>('/api/categories', {
+      method: 'POST',
+      body: JSON.stringify(fullCat),
+    });
+  } catch (err) {
+    console.warn('Backend category save error:', err);
+  }
 
   // If this ID was previously marked deleted, unmark it
   const deletedIds = getLocalItem<string[]>(STORAGE_KEY_DELETED_CATEGORIES, []);
@@ -593,6 +674,10 @@ export async function saveCategory(category: Partial<Category> & { name: string 
 }
 
 export async function deleteCategory(id: string): Promise<boolean> {
+  // Delete from backend REST API
+  try {
+    await apiRequest(`/api/categories/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch {}
   // 1. Mark in permanent deleted registry so it is never re-seeded or resurrected
   const deletedIds = getLocalItem<string[]>(STORAGE_KEY_DELETED_CATEGORIES, []);
   if (!deletedIds.includes(id)) {
@@ -650,6 +735,14 @@ export async function deleteCategory(id: string): Promise<boolean> {
 // ----------------- INSTITUTIONS SERVICE -----------------
 
 export async function fetchInstitutions(): Promise<Institution[]> {
+  try {
+    const apiInst = await apiRequest<Institution[]>('/api/institutions');
+    if (apiInst && Array.isArray(apiInst) && apiInst.length > 0) {
+      setLocalItem(STORAGE_KEY_INSTITUTIONS, apiInst);
+      return apiInst;
+    }
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -663,6 +756,13 @@ export async function fetchInstitutions(): Promise<Institution[]> {
 }
 
 export async function saveInstitution(inst: Institution): Promise<Institution> {
+  try {
+    await apiRequest<Institution>('/api/institutions', {
+      method: 'POST',
+      body: JSON.stringify(inst),
+    });
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -678,6 +778,10 @@ export async function saveInstitution(inst: Institution): Promise<Institution> {
 }
 
 export async function deleteInstitution(id: string): Promise<boolean> {
+  try {
+    await apiRequest(`/api/institutions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -709,6 +813,14 @@ export async function saveTag(name: string): Promise<Tag> {
 // ----------------- SITE SETTINGS SERVICE -----------------
 
 export async function fetchSiteSettings(): Promise<SiteSettings> {
+  try {
+    const apiSettings = await apiRequest<SiteSettings>('/api/settings');
+    if (apiSettings && apiSettings.site_name) {
+      setLocalItem(STORAGE_KEY_SETTINGS, apiSettings);
+      return apiSettings;
+    }
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -723,6 +835,14 @@ export async function fetchSiteSettings(): Promise<SiteSettings> {
 
 export async function saveSiteSettings(settings: SiteSettings): Promise<SiteSettings> {
   const updated: SiteSettings = { ...settings, updated_at: new Date().toISOString() };
+
+  try {
+    await apiRequest<SiteSettings>('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify(updated),
+    });
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -736,6 +856,14 @@ export async function saveSiteSettings(settings: SiteSettings): Promise<SiteSett
 // ----------------- MEDIA ITEMS SERVICE -----------------
 
 export async function fetchMediaItems(): Promise<MediaItem[]> {
+  try {
+    const apiMedia = await apiRequest<MediaItem[]>('/api/media');
+    if (apiMedia && Array.isArray(apiMedia)) {
+      setLocalItem(STORAGE_KEY_MEDIA, apiMedia);
+      return apiMedia;
+    }
+  } catch {}
+
   const defaultMedia: MediaItem[] = [
     {
       id: 'med-1',
@@ -773,6 +901,13 @@ export async function addMediaItem(item: Omit<MediaItem, 'id' | 'created_at'>): 
     created_at: new Date().toISOString(),
   };
 
+  try {
+    await apiRequest<MediaItem>('/api/media', {
+      method: 'POST',
+      body: JSON.stringify(newItem),
+    });
+  } catch {}
+
   const local = await fetchMediaItems();
   local.unshift(newItem);
   setLocalItem(STORAGE_KEY_MEDIA, local);
@@ -780,6 +915,10 @@ export async function addMediaItem(item: Omit<MediaItem, 'id' | 'created_at'>): 
 }
 
 export async function deleteMediaItem(id: string): Promise<boolean> {
+  try {
+    await apiRequest(`/api/media/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  } catch {}
+
   const local = await fetchMediaItems();
   setLocalItem(STORAGE_KEY_MEDIA, local.filter((m) => m.id !== id));
   return true;
@@ -924,6 +1063,13 @@ export async function submitContactMessage(msg: {
     read: false,
   };
 
+  try {
+    await apiRequest<ContactMessage>('/api/messages', {
+      method: 'POST',
+      body: JSON.stringify(newMsg),
+    });
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -938,10 +1084,22 @@ export async function submitContactMessage(msg: {
 }
 
 export async function fetchContactMessages(): Promise<ContactMessage[]> {
+  try {
+    const apiMsgs = await apiRequest<ContactMessage[]>('/api/messages');
+    if (apiMsgs && Array.isArray(apiMsgs)) {
+      setLocalItem(STORAGE_KEY_MESSAGES, apiMsgs);
+      return apiMsgs;
+    }
+  } catch {}
+
   return getLocalItem<ContactMessage[]>(STORAGE_KEY_MESSAGES, []);
 }
 
 export async function markContactMessageRead(id: string): Promise<void> {
+  try {
+    await apiRequest(`/api/messages/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
+  } catch {}
+
   const local = getLocalItem<ContactMessage[]>(STORAGE_KEY_MESSAGES, []);
   const msg = local.find((m) => m.id === id);
   if (msg) {
@@ -960,6 +1118,13 @@ export async function addSubscriber(email: string): Promise<{ success: boolean; 
     email: email.trim().toLowerCase(),
     created_at: new Date().toISOString(),
   };
+
+  try {
+    await apiRequest('/api/subscribers', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  } catch {}
 
   const supabase = getSupabase();
   if (supabase) {
@@ -1024,6 +1189,13 @@ const INITIAL_COMMENTS: ArticleComment[] = [
 ];
 
 export async function fetchArticleComments(articleId: string): Promise<ArticleComment[]> {
+  try {
+    const apiCmts = await apiRequest<ArticleComment[]>(`/api/comments?article_id=${encodeURIComponent(articleId)}`);
+    if (apiCmts && Array.isArray(apiCmts) && apiCmts.length > 0) {
+      return apiCmts;
+    }
+  } catch {}
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -1063,6 +1235,13 @@ export async function submitArticleComment(commentData: {
     status: 'published',
     likes: 0,
   };
+
+  try {
+    await apiRequest<ArticleComment>('/api/comments', {
+      method: 'POST',
+      body: JSON.stringify(newComment),
+    });
+  } catch {}
 
   const supabase = getSupabase();
   if (supabase) {
@@ -1111,4 +1290,32 @@ export async function likeArticleComment(commentId: string, _articleId?: string)
 }
 
 export const toggleLikeComment = likeArticleComment;
+
+// ----------------- BACKEND SYNC UTILITY -----------------
+
+export async function syncFrontendWithBackend(): Promise<{ success: boolean; message: string }> {
+  try {
+    const localArticles = getLocalItem<Article[]>(STORAGE_KEY_ARTICLES, INITIAL_ARTICLES);
+    const localCategories = getLocalItem<Category[]>(STORAGE_KEY_CATEGORIES, INITIAL_CATEGORIES);
+    const localSettings = getLocalItem<SiteSettings>(STORAGE_KEY_SETTINGS, INITIAL_SETTINGS);
+    const localInstitutions = getLocalItem<Institution[]>(STORAGE_KEY_INSTITUTIONS, INITIAL_INSTITUTIONS);
+
+    const res = await apiRequest<{ success: boolean; message: string }>('/api/database/sync', {
+      method: 'POST',
+      body: JSON.stringify({
+        articles: localArticles,
+        categories: localCategories,
+        settings: localSettings,
+        institutions: localInstitutions,
+      }),
+    });
+
+    if (res && res.success) {
+      return { success: true, message: 'All changes successfully synchronized and saved into backend database!' };
+    }
+    return { success: false, message: 'Could not connect to backend server sync.' };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Sync failed.' };
+  }
+}
 

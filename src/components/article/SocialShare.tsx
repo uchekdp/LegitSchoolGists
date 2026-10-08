@@ -25,7 +25,7 @@ export const SocialShare: React.FC<SocialShareProps> = ({ article, variant = 'to
     if (typeof window !== 'undefined') {
       return window.location.href;
     }
-    return `https://legitschoolgists.com/article/${article.slug}`;
+    return `https://legitschoolgists.com.ng/article/${article.slug}`;
   };
 
   const shareUrl = getShareUrl();

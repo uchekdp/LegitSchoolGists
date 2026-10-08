@@ -3,7 +3,8 @@ import {
   Search, 
   Menu, 
   X, 
-  ShieldCheck 
+  ShieldCheck,
+  Lock 
 } from 'lucide-react';
 import { SiteSettings } from '../../types';
 
@@ -85,6 +86,16 @@ export const Header: React.FC<HeaderProps> = ({
               <Search className="w-4 h-4 text-sky-600" />
               <span className="hidden md:inline">Search articles, JAMB, schools...</span>
               <kbd className="hidden lg:inline bg-white px-1.5 py-0.5 text-[10px] text-slate-400 rounded border">⌘K</kbd>
+            </button>
+
+            {/* Admin Console Shortcut */}
+            <button
+              onClick={() => handleLinkClick('admin')}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-sky-700 bg-slate-100 hover:bg-slate-200 px-2.5 sm:px-3 py-2 rounded-lg transition-colors border border-slate-200"
+              title="Official Admin Portal: https://legitschoolgists.com.ng/admin"
+            >
+              <Lock className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Admin</span>
             </button>
 
             {/* Mobile menu toggle */}

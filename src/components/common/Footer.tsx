@@ -290,6 +290,15 @@ export const Footer: React.FC<FooterProps> = ({ settings, onNavigate }) => {
             >
               Terms of Use
             </button>
+            <span>•</span>
+            <button
+              onClick={() => onNavigate('admin')}
+              className="hover:text-amber-400 text-slate-400 flex items-center gap-1 transition-colors font-medium"
+              title="Official Admin Console: https://legitschoolgists.com.ng/admin"
+            >
+              <Lock className="w-3 h-3 text-slate-500" />
+              <span>Admin Portal</span>
+            </button>
           </div>
         </div>
       </div>

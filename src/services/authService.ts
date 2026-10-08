@@ -15,7 +15,23 @@ export async function loginAdmin(
   const cleanEmail = email.trim().toLowerCase();
   const supabase = getSupabase();
 
-  // 1. If Supabase is connected, attempt live Supabase Authentication first
+  // 1. Attempt Backend Server Authentication
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: cleanEmail, password: passcode }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.user) {
+        saveSession(data.user);
+        return { success: true, user: data.user };
+      }
+    }
+  } catch {}
+
+  // 2. If Supabase is connected, attempt live Supabase Authentication
   if (supabase) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({

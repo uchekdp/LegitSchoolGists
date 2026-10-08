@@ -55,6 +55,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackTo
         <p className="mt-1 text-center text-xs sm:text-sm text-slate-400">
           Editorial & Administrative Management Portal
         </p>
+        <div className="mt-3 flex justify-center">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-sky-400 text-[11px] font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>https://legitschoolgists.com.ng/admin</span>
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
