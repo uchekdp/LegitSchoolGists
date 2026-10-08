@@ -194,7 +194,7 @@
 .animate-left-to-right {
   display: inline-block;
   white-space: nowrap;
-  animation: marqueeLeftToRight 25s linear infinite;
+  animation: marqueeLeftToRight 120s linear infinite;
   will-change: transform;
 }
 
@@ -216,7 +216,7 @@
   display: flex;
   white-space: nowrap;
   width: max-content;
-  animation: slideTickerLeftToRight 45s linear infinite;
+  animation: slideTickerLeftToRight 180s linear infinite;
   will-change: transform;
 }
 

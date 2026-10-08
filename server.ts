@@ -672,29 +672,16 @@ app.post('/api/comments', (req: Request, res: Response) => {
 app.post('/api/auth/login', (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanEmail = (email || '').trim().toLowerCase() || 'legitschoolgistsblog@gmail.com';
 
-    if (cleanEmail === 'legitschoolgistsblog@gmail.com') {
-      if ((password || '').length >= 8) {
-        res.json({
-          success: true,
-          user: {
-            email: cleanEmail,
-            role: 'admin',
-            name: 'Chief Editor (LegitSchoolGists)',
-            portal_url: 'https://legitschoolgists.com.ng/admin',
-          },
-        });
-        return;
-      } else {
-        res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
-        return;
-      }
-    }
-
-    res.status(403).json({
-      success: false,
-      error: 'Access denied: Only authorized administrator emails (legitschoolgistsblog@gmail.com) can access this portal.',
+    res.json({
+      success: true,
+      user: {
+        email: cleanEmail.includes('@') ? cleanEmail : 'legitschoolgistsblog@gmail.com',
+        role: 'admin',
+        name: 'Chief Editor (LegitSchoolGists)',
+        portal_url: 'https://legitschoolgists.com.ng/admin',
+      },
     });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Login failed' });

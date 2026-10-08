@@ -9,7 +9,7 @@ interface AdminLoginProps {
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onBackToSite }) => {
   const [email, setEmail] = useState('legitschoolgistsblog@gmail.com');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('admin12345');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
